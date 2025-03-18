@@ -8,7 +8,7 @@ definePageMeta({
   middleware: ["auth"],
 });
 
-const page = ref(1)
+const page = ref(1) //TODO: implement pagination (08.2)
 const data = ref([])
 let links= computed(() => data.value.data);
 
