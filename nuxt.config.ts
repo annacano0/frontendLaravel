@@ -14,6 +14,7 @@ export default defineNuxtConfig({
   },
   routeRules: {
     "/profiles/*": { swr: true },
+    "/index/*": { swr: true },
     "/*": { ssr: false },
   },
 });
