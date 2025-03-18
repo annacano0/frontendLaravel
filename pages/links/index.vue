@@ -7,20 +7,22 @@ axios.get("/links");
 definePageMeta({
   middleware: ["auth"],
 });
+const queries=ref({
+  page:1,
+  "filter[full_link]":"",
+  ...useRoute().query
+})
 
-const page = ref(1) //TODO: implement pagination (08.2)
+const page = ref(useRoute().query.page || 1) //TODO: implement pagination (08.2, 08.3)
 const data = ref([])
-let links= computed(() => data.value.data);
+let links = computed(() => data.value?.data);
 
 async function getLinks() {
   try {
-    const response = await axios.get('/links', {
-      params: {
-        page: page.value,
-        perPage: 10,
-      },
-    });
-    data.value = response.data;
+    // @ts-expect-error page is a number so this is ok
+    const qs = new URLSearchParams(queries.value).toString(); 
+    const {data:res}=await axios.get(`/links?${qs}`)
+    data.value=res;
   } catch (err) {
     console.log(err);
   }
@@ -28,8 +30,9 @@ async function getLinks() {
 
 watch (page, () => {
   getLinks()
-  console.log("page change")
-})
+  useRouter().push({query:queries.value})
+},
+{deep:true})
 
 getLinks()
 </script>
@@ -92,7 +95,7 @@ getLinks()
           </tr>
         </tbody>
       </table>
-      <TailwindPagination :data="data" @pagination-change-page="page=$event"/>
+      <TailwindPagination :data="data" @pagination-change-page="queries.page=$event"/>
       <div class="mt-5 flex justify-center"></div>
     </div>
 
