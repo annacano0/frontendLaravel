@@ -9,6 +9,7 @@ definePageMeta({
 });
 const queries=ref({
   page:1,
+  sort:"",
   "filter[full_link]":"",
   ...useRoute().query
 })
@@ -52,14 +53,14 @@ getLinks()
       <table class="table-fixed w-full">
         <thead>
           <tr>
-            <th class="w-[35%]">Full Link</th>
-            <th class="w-[35%]">Short Link</th>
-            <th class="w-[10%]">Views</th>
-            <th class="w-[10%]">Edit</th>
-            <th class="w-[10%]">Trash</th>
-            <th class="w-[6%] text-center">
+            <TableTh class="w-[35%]">Full Link</TableTh>
+            <TableTh class="w-[35%]">Short Link</TableTh>
+            <TableTh class="w-[10%]">Views</TableTh>
+            <TableTh class="w-[10%]">Edit</TableTh>
+            <TableTh class="w-[10%]">Trash</TableTh>
+            <TableTh class="w-[6%] text-center">
               <button><IconRefresh /></button>
-            </th>
+            </TableTh>
           </tr>
         </thead>
         <tbody>
