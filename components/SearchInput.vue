@@ -1,11 +1,18 @@
 <script setup lang="ts">
-defineProps({
-  modelValue: { type: String, required: true },
-});
-
-defineEmits<{
+import {ref} from 'vue'
+const emit = defineEmits<{
   (e: "update:modelValue", payload: string): void;
 }>();
+let prop = defineProps({
+  modelValue:{type:String, required:true},
+})
+const userInput=ref('')
+const localValue=ref(prop.modelValue)
+const debouncedLocalValue=refDebounced(localValue,500)
+
+watch(debouncedLocalValue, ()=>{
+  emit('update:modelValue', localValue.value)
+})
 </script>
 <template>
   <div class="relative">
@@ -17,10 +24,7 @@ defineEmits<{
       type="text"
       placeholder="Search"
       class="pl-10 p-2 rounded"
-      @input="
-        $emit('update:modelValue', ($event.target as HTMLInputElement).value)
-      "
-      :value="modelValue"
+      v-model="userInput"
     />
   </div>
 </template>
