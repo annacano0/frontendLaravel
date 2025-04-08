@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {ref, computed} from 'vue';
-import axios from "axios";
 import {TailwindPagination} from "laravel-vue-pagination";
 const route = useRoute();
 const router = useRouter();
@@ -8,39 +7,31 @@ const router = useRouter();
 definePageMeta({
   middleware: ["auth"],
 });
-
+const {data, index:getLinks, destroy} = useLinks({ })
 const page = ref(Number(route.query.page) || 1) //TODO: implement pagination (08.2, 08.3)
-const data = ref([])
 
-const queries=ref({
-  page:page.value,
-  sort: "",
-  "filter[full_link]": "",
+const queries = ref({
+  page: Number(route.query.page) || 1,
+  sort: route.query.sort?.toString() || "",
+  "filter[full_link]": route.query["filter[full_link]"]?.toString() || "",
   ...route.query
-})
+});
+
+async function handleDelete(id: number) {
+    await destroy(id);
+    if(data.value){
+      data.value.data = data.value.data.filter((link) => link.id !== id);
+    }
+    getLinks();
+  
+}
 
 let links = computed(() => data.value?.data || []);
 
-
-async function getLinks() {
-  try {
-    // @ts-expect-error page is a number so this is ok
-    const qs = new URLSearchParams(queries.value).toString(); 
-    const {data:res}=await axios.get(`/links?${qs}`)
-    data.value=res;
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-
-watch (page, () => {
-  router.push({query:queries.value})
-  getLinks()
-},
+watch (queries, () => useRouter().push({query: queries.value}),
 {deep:true})
 
-getLinks()
+await getLinks()
 </script>
 <template>
   <div>
@@ -64,13 +55,13 @@ getLinks()
             <TableTh class="w-[10%]" name=""  modelValue="">Edit</TableTh>
             <TableTh class="w-[10%]" name=""  modelValue="">Trash</TableTh>
             <TableTh class="w-[6%] text-center" name="" modelValue="" >
-              <button @click="getLinks"><IconRefresh class="w-[15px] relative top-[2px]"/></button>
+              <button @click="getLinks()"><IconRefresh class="w-[15px] relative top-[2px]"/></button>
             </TableTh>
           </tr>
         </thead>
         <tbody>
           <tr v-for="link in links">
-            <td>
+            <td :title="`created ${useTimeAgo(link.created_at).value}`">
               <a :href="link.full_link" target="_blank">
                 {{ link.full_link.replace(/^http(s?):\/\//, "") }}</a
               >
@@ -95,13 +86,13 @@ getLinks()
               /></NuxtLink>
             </td>
             <td>
-              <button><IconTrash /></button>
+              <button @click="handleDelete(link.id)"><IconTrash /></button>
             </td>
             <td></td>
           </tr>
         </tbody>
       </table>
-      <TailwindPagination :data="data" @pagination-change-page="page=$event"/>
+      <TailwindPagination :data="data" @pagination-change-page="queries.page=$event"/>
       <div class="mt-5 flex justify-center"></div>
     </div>
 
