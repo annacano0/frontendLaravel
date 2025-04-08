@@ -3,7 +3,7 @@ import {ref} from 'vue'
 const emit = defineEmits<{
   (e: "update:modelValue", payload: string): void;
 }>();
-let prop = defineProps({
+const prop = defineProps({
   modelValue:{type:String, required:true},
 })
 const userInput=ref('')

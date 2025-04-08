@@ -2,21 +2,25 @@
 import {ref, computed} from 'vue';
 import axios from "axios";
 import {TailwindPagination} from "laravel-vue-pagination";
+const route = useRoute();
+const router = useRouter();
 
-axios.get("/links");
 definePageMeta({
   middleware: ["auth"],
 });
+
+const page = ref(Number(route.query.page) || 1) //TODO: implement pagination (08.2, 08.3)
+const data = ref([])
+
 const queries=ref({
-  page:1,
-  sort:"",
-  "filter[full_link]":"",
-  ...useRoute().query
+  page:page.value,
+  sort: "",
+  "filter[full_link]": "",
+  ...route.query
 })
 
-const page = ref(useRoute().query.page || 1) //TODO: implement pagination (08.2, 08.3)
-const data = ref([])
-let links = computed(() => data.value?.data);
+let links = computed(() => data.value?.data || []);
+
 
 async function getLinks() {
   try {
@@ -29,9 +33,10 @@ async function getLinks() {
   }
 }
 
+
 watch (page, () => {
+  router.push({query:queries.value})
   getLinks()
-  useRouter().push({query:queries.value})
 },
 {deep:true})
 
@@ -42,7 +47,7 @@ getLinks()
     <nav class="flex justify-between mb-4 items-center">
       <h1 class="mb-0">My Links</h1>
       <div class="flex items-center">
-        <SearchInput modelValue="" />
+        <SearchInput v-model="queries['filter[full_link]']" />
         <NuxtLink to="/links/create" class="ml-4">
           <IconPlusCircle class="inline" /> Create New
         </NuxtLink>
@@ -53,13 +58,13 @@ getLinks()
       <table class="table-fixed w-full">
         <thead>
           <tr>
-            <TableTh class="w-[35%]">Full Link</TableTh>
-            <TableTh class="w-[35%]">Short Link</TableTh>
-            <TableTh class="w-[10%]">Views</TableTh>
-            <TableTh class="w-[10%]">Edit</TableTh>
-            <TableTh class="w-[10%]">Trash</TableTh>
-            <TableTh class="w-[6%] text-center">
-              <button><IconRefresh /></button>
+            <TableTh class="w-[29%]" name="" :modelValue="queries.sort">Full Link</TableTh>
+            <TableTh class="w-[29%]" name="" :modelValue="queries.sort">Short Link</TableTh>
+            <TableTh class="w-[16%]" name="" :modelValue="queries.sort">Views</TableTh>
+            <TableTh class="w-[10%]" name=""  modelValue="">Edit</TableTh>
+            <TableTh class="w-[10%]" name=""  modelValue="">Trash</TableTh>
+            <TableTh class="w-[6%] text-center" name="" modelValue="" >
+              <button @click="getLinks"><IconRefresh class="w-[15px] relative top-[2px]"/></button>
             </TableTh>
           </tr>
         </thead>
@@ -96,11 +101,10 @@ getLinks()
           </tr>
         </tbody>
       </table>
-      <TailwindPagination :data="data" @pagination-change-page="queries.page=$event"/>
+      <TailwindPagination :data="data" @pagination-change-page="page=$event"/>
       <div class="mt-5 flex justify-center"></div>
     </div>
 
-    <!-- No links message for when table is empty -->
     <div
       v-else
       class="border-dashed border-gray-500 p-3 border-[1px] text-center"
@@ -109,10 +113,8 @@ getLinks()
         <IconLink />
       </div>
       <p>
-        <!-- Show this if reason for no links is none found in search -->
         <span v-if="false"> No links matching links found. </span>
 
-        <!-- Show this if reason for no links is User has none -->
         <span v-else>
           No links created yet
           <NuxtLink to="/links/create" class="text-green-600"
